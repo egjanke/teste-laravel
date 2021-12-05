@@ -15,9 +15,24 @@ class ClientController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return Client::with('categories')->get();
+        $client = Client::query()->with('categories');
+        $params = $request->all();
+        if ($params) {
+            switch ($params['type']){
+                case 'client':
+                    $client->where('name', 'like', '%'.$params['filter'].'%');
+                    break;
+                case 'state':
+                    $client->where('state', 'like', '%'.$params['filter'].'%');
+                    break;
+                case 'category':
+                    $client->whereRaw("category_id in (select id from categories where name like '%".$params['filter']."%')");
+                    break;
+            }
+        }
+        return $client->get();
     }
 
     /**
